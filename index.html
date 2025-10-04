@@ -308,7 +308,7 @@ function addImageRADEC(obj){
                    z: ${nearest.z?.toFixed(3)??"NA"}, logM: ${nearest.logm?.toFixed(1)??"NA"}`;
 
         legacyUrl=`https://www.legacysurvey.org/viewer?ra=${nearest.ra}&dec=${nearest.dec}&layer=${_layer}&zoom=14`;
-        spectraUrl=nearest.targetid?`https://www.legacysurvey.org/viewer-desi/desi-spectrum/dr1/targetid${nearest.targetid}`:null;
+        spectraUrl=nearest.targetid?`https://www.legacysurvey.org/viewer/desi-spectrum/dr1/targetid${nearest.targetid}`:null;
     } else {
         const blanks=["blank_imgs/grumpy_dog.png","blank_imgs/grumpy_cat.png","blank_imgs/grumpy_owl.png"];
         imgUrl=blanks[Math.floor(Math.random()*blanks.length)];
