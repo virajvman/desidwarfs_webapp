@@ -283,48 +283,54 @@ function coneCheck(ra,dec,z,logM){
   return d<=radius/60 && (isNaN(z)|| (z>=z_min && z<=z_max)) && (isNaN(logM)|| (logM>=logM_min && logM<=logM_max));
 }
 
-// Add image renderer (same as before)
+
 function addImageRADEC(obj){
     let ra=obj.ra, dec=obj.dec;
     let searchRadius=parseFloat($("#search_radius").val())||1;
     let nearest=null, minDist=Infinity;
 
     if(ra!==undefined && dec!==undefined){
-      catalogData.forEach(c=>{
-        let d=Math.sqrt((ra-c.ra)**2+(dec-c.dec)**2)*3600;
-        if(d<minDist && d<=searchRadius){ minDist=d; nearest=c; }
-      });
+        catalogData.forEach(c=>{
+            let d=Math.sqrt((ra-c.ra)**2+(dec-c.dec)**2)*3600;
+            if(d<minDist && d<=searchRadius){ minDist=d; nearest=c; }
+        });
     }
 
     let imgUrl,labelText,legacyUrl,spectraUrl;
     if(nearest){
         imgUrl=_image_urls[_source]
-          .replace("${ra}",nearest.ra)
-          .replace("${dec}",nearest.dec)
-          .replace("${scale}",_scale)
-          .replace("${layer}",_layer);
+            .replace("${ra}",nearest.ra)
+            .replace("${dec}",nearest.dec)
+            .replace("${scale}",_scale)
+            .replace("${layer}",_layer);
 
-        labelText=`RA: ${nearest.ra.toFixed(3)}, DEC: ${nearest.dec.toFixed(3)}<br>
-                   z: ${nearest.z?.toFixed(3)??"NA"}, logM: ${nearest.logm?.toFixed(1)??"NA"}, <i>r</i>: ${nearest.mag_r?.toFixed(2) ?? "NA"}`;
+        labelText=`(${nearest.ra.toFixed(3)}, ${nearest.dec.toFixed(3)})<br>
+                   z: ${nearest.z?.toFixed(3)??"NA"}, logMstar: ${nearest.logm?.toFixed(1)??"NA"}, r: ${nearest.mag_r?.toFixed(1)??"NA"}`;
 
         legacyUrl=`https://www.legacysurvey.org/viewer?ra=${nearest.ra}&dec=${nearest.dec}&layer=${_layer}&zoom=14`;
-        spectraUrl=nearest.targetid?`https://www.legacysurvey.org/viewer/desi-spectrum/dr1/targetid${nearest.targetid}`:null;
+        spectraUrl=nearest.targetid ? `https://www.legacysurvey.org/viewer/desi-spectrum/dr1/targetid${nearest.targetid}` : null;
+        
     } else {
         const blanks=["blank_imgs/grumpy_dog.png","blank_imgs/grumpy_cat.png","blank_imgs/grumpy_owl.png"];
         imgUrl=blanks[Math.floor(Math.random()*blanks.length)];
-        labelText="No match found"; legacyUrl="#"; spectraUrl=null;
+        labelText="No match found"; 
+        legacyUrl="#"; 
+        spectraUrl=null;
     }
 
     let img=$("<img>").addClass("pic").attr("src",imgUrl).css("cursor","pointer");
     let linkWrapper=$("<a>").attr("href",legacyUrl).attr("target","_blank").append(img);
+
     let label=$("<div>").addClass("pic-label").html(labelText);
-    if(spectraUrl){ let spectraLink=$("<a>").attr("href",spectraUrl).attr("target","_blank").text("Spectra"); 
-        label.append("<br>").append(spectraLink)
-        .append(` ${nearest.targetid}`); 
-    }
+
+    if(spectraUrl){
+    label.append(`<br><a href="${spectraUrl}" target="_blank">Spectra</a> ${nearest.targetid ?? ""}`);
+}
+
     let container=$("<div>").addClass("pic-container").append(linkWrapper).append(label);
     $("#list").append(container);
 }
+
 
 // --- Main run + pagination ---
 function run(){
