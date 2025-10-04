@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DESI Dwarf Galaxy Viewer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/2.2.0/base-min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/2.2.0/buttons-min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/2.2.0/forms-min.css" />
+<style>
+#main{ padding:7px; max-width:1020px; margin:auto; margin-bottom:200px; }
+#form{ max-width:960px; margin:0 auto; text-align:center; }
+textarea,input{ margin:0.2em 0; font-size:0.9em; }
+#filter-type, #layer, #scale{ height:2.5em; display:inline-block !important; margin-bottom:0 !important; }
+#scale{ width:5em; }
+#list{ margin:0 auto; padding:0; display:flex; flex-wrap:wrap; justify-content:flex-start; gap:8px; }
+.info_button{ margin:20px auto; width:7em; display:none; }
+.options > label{ margin:0.1em 0.4em; display:inline-block; }
+.filter-section{ margin:0.5em 0; display:none; }
+.filter-row{ display:flex; flex-wrap:wrap; gap:0.5em; justify-content:center; margin:0.5em 0; }
+.filter-row label{ flex: 1 1 120px; }
+.credit{ font-size:80%; color:#333; line-height:1.5; }
+.credit a{ color:#0078e7; text-decoration:none; }
+.pic-container{ width:calc(20% - 8px); text-align:center; display:flex; flex-direction:column; align-items:center; }
+.pic{ width:100%; height:auto; border:solid 4px #FFF; display:block; margin:0 auto; }
+.pic-label{ font-size:0.8em; margin-top:2px; width:100%; min-height:3.4em; text-align:center; word-wrap:break-word; }
+hr{ margin:1em 0; }
+textarea#input-list, textarea#input-targetid{ width:100%; height:180px; font-family:monospace; }
+#pagination-controls { text-align:center; margin:15px 0; }
+#pagination-controls button { margin:0 5px; }
+
+#sample {
+      height: 50px;       /* controls how many rows are visible */
+      line-height: 1.5em;  /* controls vertical spacing inside options */
+  }
+
+#sample-container div {
+    display: flex;
+    flex-direction: column; /* stack vertically */
+    align-items: flex-start; /* left-align */
+    margin-top: 2px;
+}
+
+#sample-container label {
+    display: flex;
+    align-items: center;
+    gap: 1px; /* space between checkbox and text */
+    margin-bottom: 1px;
+    font-size: 0.9em;
+}
+
+</style>
+</head>
+
+<body>
+<div id="main">
+  <div id="form">
+    <form class="pure-form">
+      <fieldset>
+
+        <label>Filter type:
+          <select id="filter-type">
+            <option value="list">RA/DEC list</option>
+            <option value="range">RA/DEC range</option>
+            <option value="cone">Cone search</option>
+            <option value="targetid">TARGETID search</option>
+          </select>
+        </label>
+
+        <!-- Filter input -->
+        <div id="filter-list" class="filter-section">
+          <textarea id="input-list" placeholder="RA DEC">60.7766 -30.8133
+58.8279 -31.1679
+60.2263 -31.2122
+60.4180 -30.9578</textarea>
+          <label>Search radius (arcsec): <input type="number" id="search_radius" value="1"></label>
+        </div>
+
+        <!-- Section 2: RA/DEC range -->
+        <style>
+            .filter-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 12px 16px;
+              align-items: center;
+            }
+            .filter-grid label {
+              display: flex;
+              flex-direction: column;
+              font-size: 14px;
+            }
+            .filter-sample { margin-top: 15px; }
+        </style>
+
+        <div id="filter-range" class="filter-section">
+            <div class="filter-grid">
+              <label>RA min: <input type="number" id="ra_min"></label>
+              <label>RA max: <input type="number" id="ra_max"></label>
+              <label>DEC min: <input type="number" id="dec_min"></label>
+              <label>DEC max: <input type="number" id="dec_max"></label>
+          
+              <label>z min: <input type="number" id="z_min"></label>
+              <label>z max: <input type="number" id="z_max"></label>
+              <label>logM min: <input type="number" id="logm_min"></label>
+              <label>logM max: <input type="number" id="logm_max"></label>
+          
+        
+              <label>MAG_R min: <input type="number" id="mag_r_min"></label>
+              <label>MAG_R max: <input type="number" id="mag_r_max"></label>
+            </div>
+          
+            <div class="filter-sample" id="sample-container">
+                <label>SAMPLE:</label>
+                <div>
+                  <label><input type="checkbox" value="BGS_BRIGHT"> BGS_BRIGHT</label><br>
+                  <label><input type="checkbox" value="BGS_FAINT"> BGS_FAINT</label><br>
+                  <label><input type="checkbox" value="LOWZ"> LOWZ</label><br>
+                  <label><input type="checkbox" value="ELG"> ELG</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Cone -->
+        <div id="filter-cone" class="filter-section">
+          <div class="filter-grid">
+            <label>RA center:<input type="number" id="ra_c" step="any"></label>
+            <label>DEC center:<input type="number" id="dec_c" step="any"></label>
+            <label>Radius (arcmin):<input type="number" id="radius" step="any"></label>
+          </div>
+          <div class="filter-grid">
+            <label>z min:<input type="number" id="z_cmin" step="any"></label>
+            <label>z max:<input type="number" id="z_cmax" step="any"></label>
+            <label>logM min:<input type="number" id="logm_cmin" step="any"></label>
+            <label>logM max:<input type="number" id="logm_cmax" step="any"></label>
+          </div>
+        </div>
+
+        <!-- TARGETID input -->
+        <div id="filter-targetid" class="filter-section">
+            <textarea id="input-targetid" placeholder="TARGETID">123456</textarea>
+        </div>
+
+        <hr>
+
+        <!-- Common options -->
+        
+        <div class="options">
+            <label>
+              <select id="layer">
+                <option value="ls-dr9" selected>Legacy Surveys DR9</option>
+                <option value="sdss">SDSS</option>
+                <option value="hsc-dr3">HSC DR3</option>
+                <option value="galex">GALEX</option>
+              </select>
+            </label>
+            <label>
+              Side length = <input type="number" id="scale" value="0.25" step="any" min="0.01" max="999"> arcmin
+            </label>
+            <label>
+              Per page:
+              <select id="page-size">
+                <option value="20">20</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+          
+            <!-- Run button (note type="button" to avoid submitting the form) -->
+            <button id="run-button" type="button" class="pure-button pure-button-primary">Run</button>
+          </div>
+          
+
+
+  <div id="pagination-controls"></div>
+
+  <div id="results-info" style="margin:10px 0; font-size:0.95em; color:#333;"></div>
+
+  <div id="list"></div>
+
+  <div class="info_button" id="loading"><span class="pure-button pure-button-disabled">Loading...</span></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cash/8.1.1/cash.min.js"></script>
+
+<script>
+var _scale,_layer,_source,_allItems=[], catalogData=[];
+var filteredResults = [];
+var currentPage = 1;
+var pageSize = 50;
+
+// Image URL templates
+const _image_urls={
+  "ls-dr9":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "sdss":"https://skyserver.sdss.org/dr17/SkyServerWS/ImgCutout/getjpeg?ra=${ra}&dec=${dec}&scale=${scale}&width=180&height=180",
+  "hsc-dr3":"https://hsc-release.mtk.nao.ac.jp/cutout?ra=${ra}&dec=${dec}&scale=${scale}&size=180",
+  "galex":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180"
+};
+
+function loadCatalog() {
+    fetch('desi_dwarfs.csv')
+    .then(resp => resp.text())
+    .then(text => {
+        const lines = text.split("\n").filter(l => l.trim().length > 0);
+        const header = lines[0].split(/\s*,\s*|\s+/);
+
+        const iTARGETID = header.map(h=>h.toLowerCase()).indexOf("targetid");
+        const iSAMPLE   = header.map(h=>h.toLowerCase()).indexOf("sample");
+        const iZ        = header.map(h=>h.toLowerCase()).indexOf("z");
+        const iRA       = header.map(h=>h.toLowerCase()).indexOf("ra");
+        const iDEC      = header.map(h=>h.toLowerCase()).indexOf("dec");
+        const iMAG_R    = header.map(h=>h.toLowerCase()).indexOf("mag_r");
+        const iLOGM     = header.map(h=>h.toLowerCase()).indexOf("logm_saga_fidu");
+
+        catalogData = lines.slice(1).map(line => {
+            const items = line.split(/\s*,\s*|\s+/);
+            return {
+                targetid: items[iTARGETID],
+                sample: items[iSAMPLE],
+                z: parseFloat(items[iZ]),
+                ra: parseFloat(items[iRA]),
+                dec: parseFloat(items[iDEC]),
+                mag_r: parseFloat(items[iMAG_R]),
+                logm: parseFloat(items[iLOGM]),
+                row: items
+            };
+        });
+
+        run();
+    });
+}
+
+function showFilterSection(){
+  $(".filter-section").hide();
+  const t=$("#filter-type").val();
+  if(t==="list") $("#filter-list").show();
+  else if(t==="range") $("#filter-range").show();
+  else if(t==="cone") $("#filter-cone").show();
+  else if(t==="targetid") $("#filter-targetid").show();
+}
+$("#filter-type").on("change", showFilterSection);
+showFilterSection();
+
+function parseLineList(line){
+    const parts = line.trim().split(/\s+/);
+    return [parseFloat(parts[0]), parseFloat(parts[1])];
+}
+
+// Filtering helpers (same as before, unchanged)
+function rangeCheck(ra, dec, z, logM, mag_r, sample){
+  const ra_min   = parseFloat($("#ra_min").val())   || -Infinity;
+  const ra_max   = parseFloat($("#ra_max").val())   || Infinity;
+  const dec_min  = parseFloat($("#dec_min").val())  || -Infinity;
+  const dec_max  = parseFloat($("#dec_max").val())  || Infinity;
+  const z_min    = parseFloat($("#z_min").val())    || -Infinity;
+  const z_max    = parseFloat($("#z_max").val())    || Infinity;
+  const logM_min = parseFloat($("#logm_min").val()) || -Infinity;
+  const logM_max = parseFloat($("#logm_max").val()) || Infinity;
+  const r_min    = parseFloat($("#mag_r_min").val())|| -Infinity;
+  const r_max    = parseFloat($("#mag_r_max").val())|| Infinity;
+  const selectedSamples = $("#sample-container input:checked").map(function(){
+    return $(this).val();
+}).get();
+
+  return (
+    ra>=ra_min && ra<=ra_max &&
+    dec>=dec_min && dec<=dec_max &&
+    (isNaN(z)    || (z>=z_min && z<=z_max)) &&
+    (isNaN(logM) || (logM>=logM_min && logM<=logM_max)) &&
+    (isNaN(mag_r)|| (mag_r>=r_min && mag_r<=r_max)) &&
+    (selectedSamples.length===0 || selectedSamples.includes(sample))
+  );
+}
+
+function coneCheck(ra,dec,z,logM){
+  const ra0=parseFloat($("#ra_c").val()), dec0=parseFloat($("#dec_c").val()), radius=parseFloat($("#radius").val());
+  if(isNaN(ra0) || isNaN(dec0) || isNaN(radius)) return true;
+  const z_min=parseFloat($("#z_cmin").val())||-Infinity;
+  const z_max=parseFloat($("#z_cmax").val())||Infinity;
+  const logM_min=parseFloat($("#logm_cmin").val())||-Infinity;
+  const logM_max=parseFloat($("#logm_cmax").val())||Infinity;
+  const d=Math.sqrt(((ra-ra0)*Math.cos(dec*Math.PI/180))**2 + (dec-dec0)**2);
+  return d<=radius/60 && (isNaN(z)|| (z>=z_min && z<=z_max)) && (isNaN(logM)|| (logM>=logM_min && logM<=logM_max));
+}
+
+// Add image renderer (same as before)
+function addImageRADEC(obj){
+    let ra=obj.ra, dec=obj.dec;
+    let searchRadius=parseFloat($("#search_radius").val())||1;
+    let nearest=null, minDist=Infinity;
+
+    if(ra!==undefined && dec!==undefined){
+      catalogData.forEach(c=>{
+        let d=Math.sqrt((ra-c.ra)**2+(dec-c.dec)**2)*3600;
+        if(d<minDist && d<=searchRadius){ minDist=d; nearest=c; }
+      });
+    }
+
+    let imgUrl,labelText,legacyUrl,spectraUrl;
+    if(nearest){
+        imgUrl=_image_urls[_source]
+          .replace("${ra}",nearest.ra)
+          .replace("${dec}",nearest.dec)
+          .replace("${scale}",_scale)
+          .replace("${layer}",_layer);
+
+        labelText=`RA: ${nearest.ra.toFixed(3)}, DEC: ${nearest.dec.toFixed(3)}<br>
+                   z: ${nearest.z?.toFixed(3)??"NA"}, logM: ${nearest.logm?.toFixed(1)??"NA"}`;
+
+        legacyUrl=`https://www.legacysurvey.org/viewer?ra=${nearest.ra}&dec=${nearest.dec}&layer=${_layer}&zoom=14`;
+        spectraUrl=nearest.targetid?`https://www.legacysurvey.org/viewer-desi/desi-spectrum/dr1/targetid${nearest.targetid}`:null;
+    } else {
+        const blanks=["blank_imgs/grumpy_dog.png","blank_imgs/grumpy_cat.png","blank_imgs/grumpy_owl.png"];
+        imgUrl=blanks[Math.floor(Math.random()*blanks.length)];
+        labelText="No match found"; legacyUrl="#"; spectraUrl=null;
+    }
+
+    let img=$("<img>").addClass("pic").attr("src",imgUrl).css("cursor","pointer");
+    let linkWrapper=$("<a>").attr("href",legacyUrl).attr("target","_blank").append(img);
+    let label=$("<div>").addClass("pic-label").html(labelText);
+    if(spectraUrl){ let spectraLink=$("<a>").attr("href",spectraUrl).attr("target","_blank").text("Spectra"); label.append("<br>").append(spectraLink); }
+    let container=$("<div>").addClass("pic-container").append(linkWrapper).append(label);
+    $("#list").append(container);
+}
+
+// --- Main run + pagination ---
+function run(){
+    _scale=parseFloat($("#scale").val());
+    _layer=$("#layer").val(); _source=_layer;
+    currentPage=1; // reset to first page
+    filterResults();
+    renderPage();
+}
+
+function filterResults(){
+    filteredResults=[];
+    const ftype=$("#filter-type").val();
+
+    if(ftype==="list"){
+        const itemsList=$("#input-list").val().split("\n").map(l=>l.trim()).filter(Boolean).map(parseLineList);
+        filteredResults=itemsList.map(([ra,dec])=>({ra,dec}));
+    } else if(ftype==="range"){
+        filteredResults=catalogData.filter(c=>rangeCheck(c.ra,c.dec,c.z,c.logm,c.mag_r,c.sample));
+    } else if(ftype==="cone"){
+        filteredResults=catalogData.filter(c=>coneCheck(c.ra,c.dec,c.z,c.logm));
+    } else if(ftype==="targetid"){
+        const ids=$("#input-targetid").val().split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
+        ids.forEach(id=>{
+          const matches=catalogData.filter(c=>c.targetid===id);
+          if(matches.length){ filteredResults.push(...matches); }
+          else { filteredResults.push({}); }
+        });
+    }
+}
+
+
+function renderPage(){
+    $("#list").empty();
+    const totalPages = Math.ceil(filteredResults.length / pageSize);
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = filteredResults.slice(start, end);
+
+    // --- Update results info ---
+    if(filteredResults.length === 0){
+        $("#results-info").text("No matches found.");
+    } else {
+        $("#results-info").text(
+            `Showing ${start + 1}–${Math.min(end, filteredResults.length)} of ${filteredResults.length} results`
+        );
+    }
+
+    pageItems.forEach(obj => addImageRADEC(obj));
+    renderPaginationControls(totalPages);
+}
+
+
+
+
+
+function renderPaginationControls(totalPages){
+    let controls=$("#pagination-controls");
+    controls.empty();
+    if(totalPages<=1) return;
+
+    let prevBtn=$("<button>").text("Prev").prop("disabled",currentPage===1).on("click",()=>{ currentPage--; renderPage(); });
+    let nextBtn=$("<button>").text("Next").prop("disabled",currentPage===totalPages).on("click",()=>{ currentPage++; renderPage(); });
+    let info=$("<span>").text(` Page ${currentPage} of ${totalPages} `);
+
+    controls.append(prevBtn).append(info).append(nextBtn);
+}
+
+// Event listeners
+// $("#scale,#layer,#filter-type,#input-list,#input-targetid,#ra_min,#ra_max,#dec_min,#dec_max,#z_min,#z_max,#logm_min,#logm_max,#mag_r_min,#mag_r_max,#ra_c,#dec_c,#radius,#z_cmin,#z_cmax,#logm_cmin,#logm_cmax,#sample,#search_radius").on("change input", run);
+
+$("#run-button").on("click", () => {
+    currentPage = 1;  // reset to first page
+    run();
+});
+
+
+$("#page-size").on("change",()=>{ pageSize=parseInt($("#page-size").val()); currentPage=1; renderPage(); });
+
+loadCatalog();
+</script>
+</body>
+</html>
