@@ -305,7 +305,7 @@ function addImageRADEC(obj){
           .replace("${layer}",_layer);
 
         labelText=`RA: ${nearest.ra.toFixed(3)}, DEC: ${nearest.dec.toFixed(3)}<br>
-                   z: ${nearest.z?.toFixed(3)??"NA"}, logM: ${nearest.logm?.toFixed(1)??"NA"}`;
+                   z: ${nearest.z?.toFixed(3)??"NA"}, logM: ${nearest.logm?.toFixed(1)??"NA"}, <i>r</i>: ${nearest.mag_r?.toFixed(2) ?? "NA"}`;
 
         legacyUrl=`https://www.legacysurvey.org/viewer?ra=${nearest.ra}&dec=${nearest.dec}&layer=${_layer}&zoom=14`;
         spectraUrl=nearest.targetid?`https://www.legacysurvey.org/viewer/desi-spectrum/dr1/targetid${nearest.targetid}`:null;
@@ -318,7 +318,10 @@ function addImageRADEC(obj){
     let img=$("<img>").addClass("pic").attr("src",imgUrl).css("cursor","pointer");
     let linkWrapper=$("<a>").attr("href",legacyUrl).attr("target","_blank").append(img);
     let label=$("<div>").addClass("pic-label").html(labelText);
-    if(spectraUrl){ let spectraLink=$("<a>").attr("href",spectraUrl).attr("target","_blank").text("Spectra"); label.append("<br>").append(spectraLink); }
+    if(spectraUrl){ let spectraLink=$("<a>").attr("href",spectraUrl).attr("target","_blank").text("Spectra"); 
+        label.append("<br>").append(spectraLink)
+        .append(` ${nearest.targetid}`); 
+    }
     let container=$("<div>").addClass("pic-container").append(linkWrapper).append(label);
     $("#list").append(container);
 }
