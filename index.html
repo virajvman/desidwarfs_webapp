@@ -34,19 +34,48 @@ textarea#input-list, textarea#input-targetid{ width:100%; height:180px; font-fam
       line-height: 1.5em;  /* controls vertical spacing inside options */
   }
 
-#sample-container div {
-    display: flex;
-    flex-direction: column; /* stack vertically */
-    align-items: flex-start; /* left-align */
-    margin-top: 2px;
+
+/* --- Selection mode visuals --- */
+.pic-container.selected img {
+  border: 4px solid #0078e7;
+  box-shadow: 0 0 8px #0078e7;
+}
+#select-toggle.active {
+  background: #0078e7;
+  color: white;
 }
 
+/* --- Compact sample checkbox layout --- */
+#sample-container {
+  margin-top: 6px;
+}
+#sample-container div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
 #sample-container label {
-    display: flex;
-    align-items: center;
-    gap: 1px; /* space between checkbox and text */
-    margin-bottom: 1px;
-    font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  font-size: 0.9em;
+  margin: 0;
+  gap: 3px;
+}
+
+.toast-message {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  z-index: 9999;
 }
 
 </style>
@@ -99,14 +128,13 @@ textarea#input-list, textarea#input-targetid{ width:100%; height:180px; font-fam
               <label>DEC min: <input type="number" id="dec_min"></label>
               <label>DEC max: <input type="number" id="dec_max"></label>
           
-              <label>z min: <input type="number" id="z_min"></label>
-              <label>z max: <input type="number" id="z_max"></label>
-              <label>logM min: <input type="number" id="logm_min"></label>
-              <label>logM max: <input type="number" id="logm_max"></label>
+              <label>Redshift min: <input type="number" id="z_min"></label>
+              <label>Redshift max: <input type="number" id="z_max"></label>
+              <label>logMstar min: <input type="number" id="logm_min"></label>
+              <label>logMstar max: <input type="number" id="logm_max"></label>
           
-        
-              <label>MAG_R min: <input type="number" id="mag_r_min"></label>
-              <label>MAG_R max: <input type="number" id="mag_r_max"></label>
+              <label>Mag r min: <input type="number" id="mag_r_min"></label>
+              <label>Mag r max: <input type="number" id="mag_r_max"></label>
             </div>
           
             <div class="filter-sample" id="sample-container">
@@ -128,10 +156,10 @@ textarea#input-list, textarea#input-targetid{ width:100%; height:180px; font-fam
             <label>Radius (arcmin):<input type="number" id="radius" step="any"></label>
           </div>
           <div class="filter-grid">
-            <label>z min:<input type="number" id="z_cmin" step="any"></label>
-            <label>z max:<input type="number" id="z_cmax" step="any"></label>
-            <label>logM min:<input type="number" id="logm_cmin" step="any"></label>
-            <label>logM max:<input type="number" id="logm_cmax" step="any"></label>
+            <label>Redshift min:<input type="number" id="z_cmin" step="any"></label>
+            <label>Redshift max:<input type="number" id="z_cmax" step="any"></label>
+            <label>logMstar min:<input type="number" id="logm_cmin" step="any"></label>
+            <label>logMstar max:<input type="number" id="logm_cmax" step="any"></label>
           </div>
         </div>
 
@@ -147,10 +175,17 @@ textarea#input-list, textarea#input-targetid{ width:100%; height:180px; font-fam
         <div class="options">
             <label>
               <select id="layer">
+                <option value="ls-dr10-grz">Legacy Surveys DR10 (grz)</option>
+                <option value="ls-dr10-model-grz">Legacy Surveys DR10 Model (grz)</option>
+                <option value="ls-dr10-resid-grz">Legacy Surveys DR10 Residual (grz)</option>
                 <option value="ls-dr9" selected>Legacy Surveys DR9</option>
-                <option value="sdss">SDSS</option>
+                <option value="ls-dr9-model">Legacy Surveys DR9 Model</option>
+                <option value="ls-dr9-resid">Legacy Surveys DR9 Residual</option>
+                <option value="sdss-dr17">SDSS DR17</option>
+                <option value="sdss">SDSS (reprocessed by Legacy Survey)</option>
                 <option value="hsc-dr3">HSC DR3</option>
                 <option value="galex">GALEX</option>
+                <option value="unwise-neo7">unWISE W1/W2 NE07</option>
               </select>
             </label>
             <label>
@@ -167,9 +202,10 @@ textarea#input-list, textarea#input-targetid{ width:100%; height:180px; font-fam
           
             <!-- Run button (note type="button" to avoid submitting the form) -->
             <button id="run-button" type="button" class="pure-button pure-button-primary">Run</button>
+            <button id="select-toggle" type="button" class="pure-button">Select Mode</button>
+            <button id="download-selected" type="button" class="pure-button pure-button-secondary" style="display:none;">Download Selected</button>
           </div>
           
-
 
   <div id="pagination-controls"></div>
 
@@ -191,10 +227,17 @@ var pageSize = 50;
 
 // Image URL templates
 const _image_urls={
+  "ls-dr10":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "ls-dr10-model":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "ls-dr10-resid":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
   "ls-dr9":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
-  "sdss":"https://skyserver.sdss.org/dr17/SkyServerWS/ImgCutout/getjpeg?ra=${ra}&dec=${dec}&scale=${scale}&width=180&height=180",
-  "hsc-dr3":"https://hsc-release.mtk.nao.ac.jp/cutout?ra=${ra}&dec=${dec}&scale=${scale}&size=180",
-  "galex":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180"
+  "ls-dr9-model":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "ls-dr9-resid":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "sdss-dr17":"https://skyserver.sdss.org/dr17/SkyServerWS/ImgCutout/getjpeg?ra=${ra}&dec=${dec}&scale=${scale}&width=180&height=180",
+  "sdss":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "hsc-dr3":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "galex":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
+  "unwise-neo7":"https://www.legacysurvey.org/viewer/cutout.jpg?ra=${ra}&dec=${dec}&pixscale=${scale}&layer=${layer}&size=180",
 };
 
 function loadCatalog() {
@@ -411,6 +454,191 @@ $("#run-button").on("click", () => {
 $("#page-size").on("change",()=>{ pageSize=parseInt($("#page-size").val()); currentPage=1; renderPage(); });
 
 loadCatalog();
+
+// --- Selection Mode ---
+let selectMode = false;
+let selectedObjects = new Set();
+
+$("#select-toggle").on("click", function(){
+    selectMode = !selectMode;
+    $(this).toggleClass("active");
+    $(this).text(selectMode ? "Exit Select Mode" : "Select Mode");
+    if(!selectMode){
+        $(".pic-container").removeClass("selectable");
+    }
+});
+
+
+$(document).on("click", ".pic-container", function(e){
+    if(!selectMode) return;
+    e.preventDefault(); // prevent legacy viewer opening
+
+    const idx = $(this).data("idx");
+    if(selectedObjects.has(idx)){
+        selectedObjects.delete(idx);
+        $(this).removeClass("selected");
+    } else {
+        selectedObjects.add(idx);
+        $(this).addClass("selected");
+    }
+
+    $("#download-selected").toggle(selectedObjects.size > 0);
+
+    showToast(`${selectedObjects.size} object${selectedObjects.size === 1 ? '' : 's'} selected`);
+});
+
+
+
+$("#download-selected").on("click", function(){
+    if(selectedObjects.size === 0) return;
+
+    const rows = [["TARGETID","RA","DEC"]];
+    selectedObjects.forEach(idx => {
+        const obj = filteredResults[idx];
+        if(obj && obj.ra && obj.dec){
+            const nearest = findNearestCatalog(obj);
+            if(nearest){
+                rows.push([nearest.targetid, nearest.ra, nearest.dec]);
+            }
+        }
+    });
+
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], {type: "text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "selected_targets.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// Helper to find nearest catalog entry (reuse from addImageRADEC)
+function findNearestCatalog(obj){
+    let ra=obj.ra, dec=obj.dec;
+    let searchRadius=parseFloat($("#search_radius").val())||1;
+    let nearest=null, minDist=Infinity;
+
+    catalogData.forEach(c=>{
+        let d=Math.sqrt((ra-c.ra)**2+(dec-c.dec)**2)*3600;
+        if(d<minDist && d<=searchRadius){ minDist=d; nearest=c; }
+    });
+    return nearest;
+}
+
+// Modify addImageRADEC to include index
+function addImageRADEC(obj, idx){
+    let ra=obj.ra, dec=obj.dec;
+    let searchRadius=parseFloat($("#search_radius").val())||1;
+    let nearest=null, minDist=Infinity;
+
+    if(ra!==undefined && dec!==undefined){
+        catalogData.forEach(c=>{
+            let d=Math.sqrt((ra-c.ra)**2+(dec-c.dec)**2)*3600;
+            if(d<minDist && d<=searchRadius){ minDist=d; nearest=c; }
+        });
+    }
+
+    let imgUrl,labelText,legacyUrl,spectraUrl;
+    if(nearest){
+        imgUrl=_image_urls[_source]
+            .replace("${ra}",nearest.ra)
+            .replace("${dec}",nearest.dec)
+            .replace("${scale}",_scale)
+            .replace("${layer}",_layer);
+
+        labelText=`(${nearest.ra.toFixed(3)}, ${nearest.dec.toFixed(3)})<br>
+                   z: ${nearest.z?.toFixed(3)??"NA"}, logMstar: ${nearest.logm?.toFixed(1)??"NA"}, r: ${nearest.mag_r?.toFixed(1)??"NA"}`;
+
+        legacyUrl=`https://www.legacysurvey.org/viewer?ra=${nearest.ra}&dec=${nearest.dec}&layer=${_layer}&zoom=14`;
+        spectraUrl=nearest.targetid ? `https://www.legacysurvey.org/viewer/desi-spectrum/dr1/targetid${nearest.targetid}` : null;
+        
+    } else {
+        const blanks=["blank_imgs/grumpy_dog.png","blank_imgs/grumpy_cat.png","blank_imgs/grumpy_owl.png"];
+        imgUrl=blanks[Math.floor(Math.random()*blanks.length)];
+        labelText="No match found"; 
+        legacyUrl="#"; 
+        spectraUrl=null;
+    }
+
+    let img=$("<img>").addClass("pic").attr("src",imgUrl).css("cursor","pointer");
+    let linkWrapper=$("<a>").attr("href",legacyUrl).attr("target","_blank").append(img);
+
+    let label=$("<div>").addClass("pic-label").html(labelText);
+    if(spectraUrl){
+        label.append(`<br><a href="${spectraUrl}" target="_blank">Spectra</a> ${nearest.targetid ?? ""}`);
+    }
+
+    let container=$("<div>")
+        .addClass("pic-container")
+        .attr("data-idx", idx)
+        .append(linkWrapper)
+        .append(label);
+
+    $("#list").append(container);
+}
+
+// Modify renderPage() to pass idx
+function renderPage(){
+    $("#list").empty();
+    const totalPages = Math.ceil(filteredResults.length / pageSize);
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = filteredResults.slice(start, end);
+
+    if(filteredResults.length === 0){
+        $("#results-info").text("No matches found.");
+    } else {
+        $("#results-info").text(
+            `Showing ${start + 1}–${Math.min(end, filteredResults.length)} of ${filteredResults.length} results`
+        );
+    }
+
+    pageItems.forEach((obj, i) => addImageRADEC(obj, start + i));
+    renderPaginationControls(totalPages);
+}
+
+// Assume `selectedPoints` is an array of selected target IDs
+// and `filteredData` is the currently filtered catalog
+
+document.getElementById("download-btn").addEventListener("click", function() {
+  if (selectedPoints.length > 0) {
+    showToast(`Downloading ${selectedPoints.length} selected objects...`);
+    downloadData(selectedPoints);
+  } else {
+    showToast("No selection made — downloading all filtered data.");
+    downloadData(filteredData);
+  }
+});
+
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast-message";
+  toast.innerText = message;
+  document.body.appendChild(toast);
+
+  // Fade out automatically
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 500);
+  }, 2000);
+}
+
+function downloadData(data) {
+  // Convert to CSV or your chosen format
+  const csv = convertToCSV(data);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "catalog_download.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+
 </script>
 </body>
 </html>
