@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Slice Viewer - DESI Dwarf Galaxy Catalog</title>
+  <script>
+    /* Apply the saved theme to <html> before first paint to avoid a flash of the wrong mode. */
+    (function () {
+      try {
+        if (localStorage.getItem('desidwarfs-dark-mode') === '1') {
+          document.documentElement.classList.add('dark-mode');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="site.css" />
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* --- Navigation bar styling --- */
+    .topnav {
+      background-color: #004c99;
+      overflow: hidden;
+      padding: 8px 0;
+      text-align: center;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .topnav a {
+      color: #f2f2f2;
+      text-align: center;
+      padding: 10px 18px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .topnav a:hover {
+      background-color: #0066cc;
+      color: white;
+    }
+
+    .topnav a.active {
+      background-color: #0078e7;
+      color: white;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    .controls {
+      background-color: #f0f0f0;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .control-group input[type="range"] {
+      width: 150px;
+    }
+
+    .control-group label {
+      font-size: 0.9em;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .control-group input {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background-color: #ffffff;
+      color: #1a1a1a;
+      font-size: 0.9em;
+      width: 100px;
+    }
+
+    .control-group input:focus {
+      outline: none;
+      border-color: #0078e7;
+    }
+
+    /* Checkbox toggle for grid lines (styled like the controls labels, laid out inline) */
+    .grid-toggle {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .grid-toggle input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #0078e7;
+    }
+
+    button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9em;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+
+    #plotContainer {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 700px;
+    }
+
+    #cosmicPlot {
+      width: 100%;
+      height: 85vh;
+      min-height: 700px;
+    }
+
+    .subtitle {
+      color: #666;
+    }
+
+    .info-text {
+      margin: 10px 0;
+      font-size: 0.9em;
+      color: #666;
+      text-align: center;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    /* --- Dark mode overrides (toggled via shared dark-mode-toggle.js; class on <html>) --- */
+    html.dark-mode body {
+      background-color: #0e0e0e;
+      color: #e8e8e8;
+    }
+    html.dark-mode body .controls {
+      background-color: #1a1a1a;
+    }
+    html.dark-mode body .control-group label {
+      color: #ccc;
+    }
+    html.dark-mode body .control-group input {
+      background-color: #2a2a2a;
+      color: #e8e8e8;
+      border-color: #444;
+    }
+    html.dark-mode body #plotContainer {
+      background-color: #1a1a1a;
+    }
+    html.dark-mode body .subtitle,
+    html.dark-mode body .info-text,
+    html.dark-mode body .loading {
+      color: #aaa;
+    }
+    /* Orange-filled buttons in dark mode (Render / Reset / grid toggle) */
+    html.dark-mode body button {
+      background-color: #e8a855;
+      color: #1a1a1a;
+    }
+    html.dark-mode body button:hover {
+      background-color: #f0c060;
+    }
+    html.dark-mode body button:disabled {
+      background-color: #555;
+      color: #ccc;
+    }
+    /* Match the grid-toggle checkbox to the orange dark-mode accent */
+    html.dark-mode body .grid-toggle input[type="checkbox"] {
+      accent-color: #e8a855;
+    }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">Home</a>
+    <a href="interactive.html">Interactive Catalog Search</a>
+    <a href="cosmic_slice.html" class="active">Cosmic Slice Viewer</a>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align: center; margin-bottom: 10px;">Cosmic Slice Viewer</h1>
+    <p class="subtitle" style="text-align: center; margin-bottom: 20px;">
+      Visualize the large-scale structure of the universe. Radial direction shows redshift, angular direction shows RA.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>RA min (deg):</label>
+        <input type="number" id="ra_min" value="0" min="0" max="360" step="0.1">
+      </div>
+      <div class="control-group">
+        <label>RA max (deg):</label>
+        <input type="number" id="ra_max" value="360" min="0" max="360" step="0.1">
+      </div>
+      <div class="control-group">
+        <label>DEC center (deg):</label>
+        <input type="range" id="dec_center" value="0" min="-90" max="90" step="0.1">
+        <span id="dec_center_value">0.0</span>
+      </div>
+      <div class="control-group">
+        <label>DEC width (deg):</label>
+        <input type="number" id="dec_width" value="5" min="0.1" max="180" step="0.1">
+      </div>
+      <div class="control-group">
+        <label>Redshift min:</label>
+        <input type="number" id="z_min" value="0" min="0" step="0.001">
+      </div>
+      <div class="control-group">
+        <label>Redshift max:</label>
+        <input type="number" id="z_max" value="0.1" min="0" step="0.001">
+      </div>
+      <div class="control-group">
+        <label>Rotation (deg):</label>
+        <input type="number" id="rotation" value="90" min="0" max="360" step="1">
+      </div>
+      <div class="control-group">
+        <button id="updateBtn">Render Plot</button>
+      </div>
+      <div class="control-group">
+        <button id="resetBtn">Reset View</button>
+      </div>
+      <div class="control-group">
+        <label class="grid-toggle" title="Show or hide the polar grid lines (redshift tick labels and axes are kept either way)">
+          <input type="checkbox" id="gridToggle" checked> Show grid lines
+        </label>
+      </div>
+      <div class="control-group">
+        <label class="grid-toggle" title="Color galaxies by log10 stellar mass (7&ndash;9), using the same colormap as the catalog paper's cosmic-web figure">
+          <input type="checkbox" id="massColorToggle" checked> Color by stellar mass
+        </label>
+      </div>
+    </div>
+
+    <div id="infoText" class="info-text"></div>
+
+    <div id="plotContainer">
+      <div id="cosmicPlot">
+        <div class="loading">To get started, click on Render plot</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Cosmology parameters
+    const H0 = 70; // km/s/Mpc
+    const OMEGA_M = 0.3;
+    const OMEGA_LAMBDA = 0.7;
+    const C = 299792.458; // km/s
+
+    // Data storage
+    let catalogData = [];
+    let filteredData = [];
+
+    // UI state
+    let showGrid = true;      // toggled by the "Show grid lines" checkbox
+    let colorByMass = true;   // toggled by the "Color by stellar mass" checkbox
+
+    // cmasher "cosmic_r" sampled at 13 stops — the same colormap/normalization
+    // (log M* from 7 to 9) as the dwarf bowtie figure in the catalog paper.
+    const COSMIC_R = [
+      [0.000, '#5efdd0'], [0.083, '#10e5d4'], [0.167, '#06cad6'], [0.250, '#17afd6'],
+      [0.333, '#2495d8'], [0.417, '#3578dd'], [0.500, '#4c54e5'], [0.583, '#5e1fe1'],
+      [0.667, '#580daa'], [0.750, '#401969'], [0.833, '#28153a'], [0.917, '#0f0815'],
+      [1.000, '#000000']
+    ];
+    // Reversed stops for dark mode, where the bulk of the sample (log M* ~ 9)
+    // must map to the bright end to stay visible on the dark background.
+    const COSMIC = COSMIC_R.map(([t], i) => [t, COSMIC_R[COSMIC_R.length - 1 - i][1]]);
+
+    // Plot colors follow the shared light/dark theme (body.dark-mode class)
+    function plotTheme() {
+      const dark = document.documentElement.classList.contains('dark-mode');
+      return dark
+        ? { bg: '#1a1a1a', fg: '#e8e8e8', grid: 'rgba(255,255,255,0.18)', axisLine: '#777', marker: '#7eb8ff' }
+        : { bg: '#ffffff', fg: '#222222', grid: 'rgba(0,0,0,0.15)',     axisLine: '#999', marker: '#000000' };
+    }
+
+    // Comoving distance calculation from redshift
+    function comovingDistance(z) {
+      if (z <= 0) return 0;
+      
+      // For small z, use approximation
+      if (z < 0.1) {
+        return (C / H0) * z;
+      }
+      
+      // For larger z, use numerical integration
+      // D_c = (c/H0) * integral[0 to z] dz' / sqrt(OMEGA_M*(1+z')^3 + OMEGA_LAMBDA)
+      const nSteps = 100;
+      const dz = z / nSteps;
+      let integral = 0;
+      
+      for (let i = 0; i < nSteps; i++) {
+        const zStep = (i + 0.5) * dz;
+        const integrand = 1 / Math.sqrt(OMEGA_M * Math.pow(1 + zStep, 3) + OMEGA_LAMBDA);
+        integral += integrand * dz;
+      }
+      
+      return (C / H0) * integral;
+    }
+
+    // Load catalog data (Parquet via hyparquet; snappy is built in, no extra deps)
+    async function loadCatalog() {
+      try {
+        document.getElementById('cosmicPlot').innerHTML =
+          '<div class="loading">Loading catalog…</div>';
+        const { parquetReadObjects } =
+          await import('https://cdn.jsdelivr.net/npm/hyparquet@1.26.0/+esm');
+        // Fetch the whole file in one request instead of asyncBufferFromUrl, whose
+        // HEAD + byte-range requests behave inconsistently behind the GitHub Pages /
+        // Fastly CDN and cause "footer != PAR1". The catalog is ~28 MB, so a single
+        // GET into an ArrayBuffer is simple and reliable.
+        const resp = await fetch('desi_dwarfs.parquet');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching desi_dwarfs.parquet`);
+        const arrayBuffer = await resp.arrayBuffer();
+        const file = {
+          byteLength: arrayBuffer.byteLength,
+          slice: (start, end) => arrayBuffer.slice(start, end)
+        };
+        const rows = await parquetReadObjects({ file });
+
+        catalogData = rows.map(r => {
+          const z = r.Z;
+          return {
+            // TARGETID is int64 -> BigInt in JS; store as string (exact, matches all downstream use)
+            targetid: r.TARGETID == null ? "" : String(r.TARGETID),
+            z: z,
+            ra: r.RA,
+            dec: r.DEC,
+            logm: (r.LOG_MSTAR_M24 == null || isNaN(r.LOG_MSTAR_M24)) ? null : r.LOG_MSTAR_M24,
+            mag_r: (r.MAG_R == null || isNaN(r.MAG_R)) ? null : r.MAG_R,
+            // Membership flags can overlap (e.g. BGS Bright + LOWZ); join the set ones
+            samples: [r.IS_BGS_BRIGHT && 'BGS Bright', r.IS_BGS_FAINT && 'BGS Faint',
+                      r.IS_LOWZ && 'LOWZ', r.IS_ELG && 'ELG', r.IS_OTHER && 'Other']
+                     .filter(Boolean).join(', '),
+            distance: comovingDistance(z)
+          };
+        }).filter(item => !isNaN(item.ra) && !isNaN(item.dec) && !isNaN(item.z) && item.z > 0);
+
+        console.log(`Loaded ${catalogData.length} galaxies`);
+        // Default max redshift (most DESI dwarfs sit below this)
+        document.getElementById('z_max').value = 0.1;
+        
+        // Ensure the value is set before updating plot
+        // Use requestAnimationFrame to ensure DOM is updated
+        requestAnimationFrame(() => {
+          try {
+            updatePlot();
+          } catch (error) {
+            console.error('Error in initial plot update:', error);
+            // Don't show error message, just log it - plot will work when user clicks update
+          }
+        });
+      } catch (error) {
+        console.error('Error loading catalog:', error);
+        document.getElementById('cosmicPlot').innerHTML = '<div class="loading">To get started, click on Render plot</div>';
+      }
+    }
+
+    // Filter data based on ranges
+    function filterData() {
+      if (catalogData.length === 0) {
+        filteredData = [];
+        return;
+      }
+      
+      const raMin = parseFloat(document.getElementById('ra_min').value) || 0;
+      const raMax = parseFloat(document.getElementById('ra_max').value) || 360;
+      const decCenter = parseFloat(document.getElementById('dec_center').value) || 0;
+      const decWidth = parseFloat(document.getElementById('dec_width').value) || 10;
+      const decMin = decCenter - decWidth / 2;
+      const decMax = decCenter + decWidth / 2;
+      const zMin = parseFloat(document.getElementById('z_min').value) || 0;
+      const zMax = parseFloat(document.getElementById('z_max').value) || 10;
+
+      filteredData = catalogData.filter(galaxy => {
+        return galaxy.ra >= raMin && galaxy.ra <= raMax &&
+               galaxy.dec >= decMin && galaxy.dec <= decMax &&
+               galaxy.z >= zMin && galaxy.z <= zMax;
+      });
+
+      document.getElementById('infoText').textContent = 
+        `Showing ${filteredData.length.toLocaleString()} galaxies (out of ${catalogData.length.toLocaleString()} total)`;
+    }
+
+    // Create the plot
+    function createPlot() {
+      if (filteredData.length === 0 || catalogData.length === 0) {
+        // Don't show error if catalog hasn't loaded yet
+        if (catalogData.length === 0) {
+          document.getElementById('cosmicPlot').innerHTML = '<div class="loading">Loading catalog data...</div>';
+        } else {
+          document.getElementById('cosmicPlot').innerHTML = '<div class="loading">No data to display. Adjust filters and click Render plot.</div>';
+        }
+        return;
+      }
+
+      // Extract data for plotting
+      const raValues = filteredData.map(g => g.ra);
+      const redshifts = filteredData.map(g => g.z);
+      const targetids = filteredData.map(g => g.targetid);
+      const decValues = filteredData.map(g => g.dec);
+
+      // Create hover text
+      const hoverText = filteredData.map((g, i) =>
+        `TARGETID: ${g.targetid}<br>` +
+        `RA: ${g.ra.toFixed(3)}°<br>` +
+        `DEC: ${g.dec.toFixed(3)}°<br>` +
+        `z: ${g.z.toFixed(4)}<br>` +
+        `log₁₀ M★: ${g.logm == null ? 'N/A' : g.logm.toFixed(2)}<br>` +
+        `Sample(s): ${g.samples}<br>` +
+        `Distance: ${g.distance.toFixed(1)} Mpc`
+      );
+
+      // Theme-dependent colors (light/dark)
+      const theme = plotTheme();
+      const darkMode = document.documentElement.classList.contains('dark-mode');
+
+      // Marker style: flat theme color, or colored by stellar mass (paper bowtie style)
+      const marker = colorByMass
+        ? {
+            size: 1.5,
+            opacity: 0.85,
+            color: filteredData.map(g => g.logm == null ? 7 : g.logm),
+            colorscale: darkMode ? COSMIC : COSMIC_R,
+            cmin: 7,
+            cmax: 9,
+            colorbar: {
+              title: { text: 'log₁₀(M★)', font: { color: theme.fg, size: 13 }, side: 'right' },
+              tickfont: { color: theme.fg, size: 11 },
+              thickness: 12,
+              len: 0.45,
+              x: 1.02,
+              outlinewidth: 0
+            }
+          }
+        : { size: 1.5, opacity: 0.6, color: theme.marker };
+
+      // Create trace (WebGL: SVG scatterpolar chokes above ~50k points)
+      const trace = {
+        type: 'scatterpolargl',
+        r: redshifts,
+        theta: raValues,
+        mode: 'markers',
+        marker: marker,
+        text: hoverText,
+        hovertemplate: '%{text}<extra></extra>',
+        name: 'Galaxies'
+      };
+
+      // Radial axis now shows redshift z. Build "nice" redshift ticks along one radius.
+      // (loop instead of Math.max(...arr): spreading >~100k elements overflows the call stack)
+      let maxZ = -Infinity;
+      for (const z of redshifts) if (z > maxZ) maxZ = z;
+      const raMin = parseFloat(document.getElementById('ra_min').value) || 0;
+      const raMax = parseFloat(document.getElementById('ra_max').value) || 360;
+      const rotation = parseFloat(document.getElementById('rotation').value) || 90;
+
+      // Choose a round redshift step targeting ~6 ticks (e.g. 0.001, 0.002, 0.005, 0.01, ...)
+      const rawStep = maxZ / 6;
+      const stepMag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const stepNorm = rawStep / stepMag;
+      const zStep = (stepNorm < 1.5 ? 1 : stepNorm < 3 ? 2 : stepNorm < 7 ? 5 : 10) * stepMag;
+      const zDecimals = Math.max(0, -Math.floor(Math.log10(zStep)));
+
+      const zTickVals = [];
+      const zTickText = [];
+      for (let z = zStep; z <= maxZ + zStep * 1e-6; z += zStep) {
+        zTickVals.push(z);
+        zTickText.push(z.toFixed(zDecimals));
+      }
+
+      // Layout
+      const layout = {
+        polar: {
+          bgcolor: theme.bg,
+          radialaxis: {
+            tickfont: { color: theme.fg, size: 11 },
+            range: [0, maxZ * 1.05],
+            tickmode: 'array',
+            tickvals: zTickVals,
+            ticktext: zTickText,
+            showticklabels: true,  // Show redshift ticks along one radius
+            showgrid: showGrid,    // toggled by the grid-lines button
+            angle: raMin,          // Draw the redshift axis along the lower-RA edge
+            showline: true,
+            linecolor: theme.axisLine,
+            gridcolor: theme.grid,
+            side: 'clockwise',
+            tickcolor: theme.fg,
+            ticklen: 5,
+            tickwidth: 1,
+            ticks: 'outside'
+          },
+          angularaxis: {
+            title: 'RA [degrees]',
+            tickfont: { color: theme.fg, size: 11 },
+            titlefont: { color: theme.fg, size: 14 },
+            rotation: rotation,
+            direction: 'counterclockwise',
+            tickmode: 'linear',
+            tick0: Math.max(0, raMin),
+            dtick: Math.max(10, Math.floor((raMax - raMin) / 6)),
+            range: [raMin, raMax],
+            showline: true,
+            showgrid: showGrid,    // toggled by the grid-lines button
+            linecolor: theme.axisLine,
+            gridcolor: theme.grid
+          }
+        },
+        paper_bgcolor: theme.bg,
+        plot_bgcolor: theme.bg,
+        font: { color: theme.fg },
+        margin: { l: 100, r: 100, t: 50, b: 50 },
+        showlegend: false,
+        annotations: [
+          {
+            // ===== "Redshift z" radial-axis label position =====
+            // Paper coordinates: x and y each go from 0 to 1.
+            //   x: 0 = far left,  0.5 = center,  1 = far right
+            //   y: 0 = bottom,    0.5 = center,  1 = top
+            // To move the label UP,    increase y (e.g. 0.18 -> 0.22).
+            // To move the label DOWN,  decrease y.
+            // To move it sideways,     change x.
+            text: 'Redshift z',
+            xref: 'paper',
+            yref: 'paper',
+            x: 0.65,
+            y: 0.525,
+            showarrow: false,
+            font: { color: theme.fg, size: 14 }
+          }
+        ]
+      };
+
+      // Plot
+      Plotly.newPlot('cosmicPlot', [trace], layout, {
+        responsive: true,
+        scrollZoom: true,
+        displayModeBar: true,
+        modeBarButtonsToAdd: ['resetScale2d']
+      });
+
+      // Add click handler to open Legacy Survey viewer
+      document.getElementById('cosmicPlot').on('plotly_click', function(data) {
+        const point = data.points[0];
+        const index = data.points[0].pointNumber;
+        const galaxy = filteredData[index];
+        if (galaxy) {
+          const url = `https://www.legacysurvey.org/viewer?ra=${galaxy.ra}&dec=${galaxy.dec}&zoom=14`;
+          window.open(url, '_blank');
+        }
+      });
+    }
+
+    // Update plot
+    function updatePlot() {
+      // Don't try to update if catalog hasn't loaded yet
+      if (catalogData.length === 0) {
+        return;
+      }
+      
+      try {
+        filterData();
+        createPlot();
+      } catch (error) {
+        console.error('Error updating plot:', error);
+        // Silently fail - user can click update button to retry
+      }
+    }
+
+    // Reset view
+    function resetView() {
+      document.getElementById('ra_min').value = 0;
+      document.getElementById('ra_max').value = 360;
+      document.getElementById('dec_center').value = 0;
+      document.getElementById('dec_width').value = 10;
+      document.getElementById('z_min').value = 0;
+      document.getElementById('z_max').value = 0.1;
+      document.getElementById('rotation').value = 90;
+      document.getElementById('dec_center_value').textContent = '0.0';
+      updatePlot();
+    }
+
+    // Re-render the plot only (data unchanged) — used by grid toggle and theme switch
+    function rerenderPlot() {
+      if (catalogData.length > 0 && filteredData.length > 0) {
+        createPlot();
+      }
+    }
+
+    // Event listeners
+    document.getElementById('updateBtn').addEventListener('click', updatePlot);
+    document.getElementById('resetBtn').addEventListener('click', resetView);
+
+    // Toggle grid lines on/off (keeps the redshift tick labels and axes)
+    document.getElementById('gridToggle').addEventListener('change', function() {
+      showGrid = this.checked;
+      rerenderPlot();
+    });
+
+    // Toggle stellar-mass coloring on/off
+    document.getElementById('massColorToggle').addEventListener('change', function() {
+      colorByMass = this.checked;
+      rerenderPlot();
+    });
+
+    // Auto-update for DEC center slider only (not width, RA, or rotation)
+    document.getElementById('dec_center').addEventListener('input', function() {
+      document.getElementById('dec_center_value').textContent = parseFloat(this.value).toFixed(1);
+      updatePlot();
+    });
+
+    // Recolor the chart when the shared toggle flips the theme class on <html>.
+    // Re-renders via createPlot (the same proven path as the Render button), so the
+    // background/axes/markers always update. Data stays in memory; this resets zoom/pan.
+    new MutationObserver(rerenderPlot).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    // Load catalog on page load
+    loadCatalog();
+  </script>
+  <script src="dark-mode-toggle.js"></script>
+</body>
+</html>

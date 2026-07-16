@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DESI Extragalactic Dwarf Galaxy Catalog</title>
+<script>
+  /* Apply the saved theme to <html> before first paint to avoid a flash of the wrong mode. */
+  (function () {
+    try {
+      if (localStorage.getItem('desidwarfs-dark-mode') === '1') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    } catch (e) {}
+  })();
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/2.2.0/base-min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/2.2.0/buttons-min.css" />
+<link rel="stylesheet" href="site.css?v=2" />
+<style>
+body { background:#fff; margin:0; padding:0; }
+#main { max-width: 1200px; margin: 40px auto; text-align: center; }
+
+.topnav {
+  background-color: #004c99;  
+  overflow: hidden;
+  padding: 8px 0;
+  text-align: center;
+  border-radius: 0;  /* optional, remove rounded corners for full width */
+  width: 100%;       /* full screen */
+  margin: 0;         /* remove any vertical spacing */
+}
+
+.topnav a {
+  color: #f2f2f2;
+  text-align: center;
+  padding: 10px 18px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.topnav a:hover {
+  background-color: #0066cc;  
+  color: white;
+}
+
+.topnav a.active {
+  background-color: #0078e7;  
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+}
+</style>
+</head>
+
+<body>
+
+  <nav class="topnav">
+      <a href="index.html" class="active">Home</a>
+      <a href="interactive.html">Interactive Catalog Search</a>
+      <a href="cosmic_slice.html">Cosmic Slice Viewer</a>
+  </nav>
+
+  <div id="main">
+    <h1>DESI Extragalactic Dwarf Galaxy Catalog</h1>
+    <p>Welcome to the web portal.</p>
+    <p>Explore the interactive search tool, visualize galaxy cutouts and spectra, or learn more about the dataset.</p>
+    <p class="contact-line">Maintained by Viraj Manwadkar &mdash; questions welcome at <span id="contact-email">virajvm [at] stanford [dot] edu</span></p>
+
+    <button class="pure-button pure-button-primary" onclick="location.href='interactive.html'">
+      Go to Interactive Catalog Search
+    </button>
+
+    <section class="catalog-summary" aria-labelledby="catalog-summary-title">
+      <h2 id="catalog-summary-title">Catalog summary</h2>
+
+      <div class="pdf-stack" role="list">
+        <figure class="pdf-figure" role="listitem">
+          <figcaption class="pdf-caption">DESI DR1 dwarf galaxies (colored by stellar mass) tracing the nearby cosmic web, shown together with massive SDSS/NSA galaxies in red.</figcaption>
+          <a class="pdf-embed-link" href="catalog_pdfs/dwarf_galaxy_bowtie.pdf" title="Open the full-resolution PDF">
+            <img
+              class="pdf-embed"
+              src="catalog_pdfs/dwarf_galaxy_bowtie.jpg"
+              alt="Polar redshift slice of DESI DR1 dwarf galaxies in the cosmic web"
+              loading="lazy"
+            />
+          </a>
+        </figure>
+
+        <figure class="pdf-figure" role="listitem">
+          <figcaption class="pdf-caption">Stellar mass versus redshift for the four target samples that make up the catalog: BGS Bright, BGS Faint, LOWZ, and ELG.</figcaption>
+          <a class="pdf-embed-link" href="catalog_pdfs/zred_mstar_2d.pdf" title="Open the full-resolution PDF">
+            <img
+              class="pdf-embed"
+              src="catalog_pdfs/zred_mstar_2d.png"
+              alt="Stellar mass versus redshift distributions of the four catalog samples"
+              loading="lazy"
+            />
+          </a>
+        </figure>
+
+        <figure class="pdf-figure" role="listitem">
+          <figcaption class="pdf-caption">Example dwarf galaxies across r-band magnitude and stellar mass; the number in each panel counts the catalog galaxies in that bin.</figcaption>
+          <a class="pdf-embed-link" href="catalog_pdfs/dwarf_imgs_grid.pdf" title="Open the full-resolution PDF">
+            <img
+              class="pdf-embed"
+              src="catalog_pdfs/dwarf_imgs_grid.jpg"
+              alt="Grid of example dwarf galaxy images binned by magnitude and stellar mass"
+              loading="lazy"
+            />
+          </a>
+        </figure>
+
+        <figure class="pdf-figure" role="listitem">
+          <figcaption class="pdf-caption">Example DESI spectra and Legacy Surveys images of low-mass (10<sup>7</sup>&ndash;10<sup>7.5</sup> M<sub>&#9737;</sub>) dwarf galaxies in the catalog.</figcaption>
+          <a class="pdf-embed-link" href="catalog_pdfs/dwarf_egs.pdf" title="Open the full-resolution PDF">
+            <img
+              class="pdf-embed"
+              src="catalog_pdfs/dwarf_egs.png"
+              alt="Example DESI dwarf galaxy spectra with imaging cutouts"
+              loading="lazy"
+            />
+          </a>
+        </figure>
+      </div>
+    </section>
+
+    <section class="acknowledgements" aria-labelledby="acknowledgements-title">
+      <h2 id="acknowledgements-title">Acknowledgements</h2>
+      <div class="acknowledgements__content">
+        <a href="https://www.desi.lbl.gov/" target="_blank" rel="noopener" class="acknowledgements__logo">
+          <img src="catalog_pdfs/desi_logo.png?v=2" alt="DESI logo" width="120" height="auto" />
+        </a>
+        <div class="acknowledgements__text">
+          <p>This catalog builds on data from the <strong>Dark Energy Spectroscopic Instrument (DESI)</strong>. DESI is the product of an international collaboration that brings together more than 450 researchers from more than 70 institutions including Australia, Canada, China, Colombia, France, Germany, Korea, Mexico, Spain, Switzerland, the U.K., and the U.S. The collaboration is led by Lawrence Berkeley National Laboratory, which is managed by the University of California for the U.S. Department of Energy's Office of Science. DESI is located at Kitt Peak National Observatory near Tucson, Arizona. Kitt Peak is part of the NSF's National Optical-Infrared Astronomy Research Laboratory (NSF's OIR Lab).</p>
+          <p>The DESI scientists are honored to be permitted to conduct astronomical research on Iolkam Du'ag (Kitt Peak), a mountain with particular significance to the Tohono O'odham Nation.</p>
+          <p>Imaging cutouts in this portal are retrieved from the <a href="https://www.legacysurvey.org/" target="_blank" rel="noopener">Legacy Surveys</a>. Learn more about <a href="https://www.desi.lbl.gov/" target="_blank" rel="noopener">DESI</a> and the <a href="https://www.legacysurvey.org/" target="_blank" rel="noopener">Legacy Surveys</a>.</p>
+          <p><a href="#" class="acknowledgements__read-more" id="ack-read-more" aria-expanded="false">Read more</a></p>
+          <div class="acknowledgements__full" id="ack-full" hidden>
+            <p><strong>DESI</strong></p>
+            <p>This research used data obtained with the Dark Energy Spectroscopic Instrument (DESI). DESI construction and operations is managed by the Lawrence Berkeley National Laboratory. This material is based upon work supported by the U.S. Department of Energy, Office of Science, Office of High-Energy Physics, under Contract No. DE&ndash;AC02&ndash;05CH11231, and by the National Energy Research Scientific Computing Center, a DOE Office of Science User Facility under the same contract. Additional support for DESI was provided by the U.S. National Science Foundation (NSF), Division of Astronomical Sciences under Contract No. AST-0950945 to the NSF's National Optical-Infrared Astronomy Research Laboratory; the Science and Technology Facilities Council of the United Kingdom; the Gordon and Betty Moore Foundation; the Heising-Simons Foundation; the French Alternative Energies and Atomic Energy Commission (CEA); the National Council of Humanities, Science and Technology of Mexico (CONAHCYT); the Ministry of Science and Innovation of Spain (MICINN), and by the DESI Member Institutions.</p>
+            <p>Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the U.S. National Science Foundation, the U.S. Department of Energy, or any of the listed funding agencies.</p>
+            <p><strong>DESI Legacy Imaging Surveys</strong></p>
+            <p>The DESI Legacy Imaging Surveys consist of three individual and complementary projects: the Dark Energy Camera Legacy Survey (DECaLS), the Beijing-Arizona Sky Survey (BASS), and the Mayall z-band Legacy Survey (MzLS). DECaLS, BASS and MzLS together include data obtained, respectively, at the Blanco telescope, Cerro Tololo Inter-American Observatory, NSF's NOIRLab; the Bok telescope, Steward Observatory, University of Arizona; and the Mayall telescope, Kitt Peak National Observatory, NOIRLab. NOIRLab is operated by the Association of Universities for Research in Astronomy (AURA) under a cooperative agreement with the National Science Foundation. Pipeline processing and analyses of the data were supported by NOIRLab and the Lawrence Berkeley National Laboratory (LBNL). Legacy Surveys also uses data products from the Near-Earth Object Wide-field Infrared Survey Explorer (NEOWISE), a project of the Jet Propulsion Laboratory/California Institute of Technology, funded by the National Aeronautics and Space Administration. Legacy Surveys was supported by: the Director, Office of Science, Office of High Energy Physics of the U.S. Department of Energy; the National Energy Research Scientific Computing Center, a DOE Office of Science User Facility; the U.S. National Science Foundation, Division of Astronomical Sciences; the National Astronomical Observatories of China, the Chinese Academy of Sciences and the Chinese National Natural Science Foundation. LBNL is managed by the Regents of the University of California under contract to the U.S. Department of Energy. The complete acknowledgments can be found at <a href="https://www.legacysurvey.org/acknowledgment/" target="_blank" rel="noopener">legacysurvey.org/acknowledgment</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function() {
+      /* Assemble the contact mailto link at runtime so the address never appears
+         verbatim in the HTML source (basic scraper protection). No-JS visitors
+         still see the "[at] ... [dot]" fallback text. */
+      var el = document.getElementById('contact-email');
+      if (el) {
+        var u = 'virajvm', d = ['stanford', 'edu'].join('.');
+        var a = document.createElement('a');
+        a.href = 'mail' + 'to:' + u + '@' + d;
+        a.textContent = u + '@' + d;
+        el.replaceChildren(a);
+      }
+    })();
+    (function() {
+      var link = document.getElementById('ack-read-more');
+      var full = document.getElementById('ack-full');
+      if (link && full) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          var isExpanded = full.hidden;
+          full.hidden = !isExpanded;
+          link.setAttribute('aria-expanded', isExpanded);
+          link.textContent = isExpanded ? 'Read less' : 'Read more';
+        });
+      }
+    })();
+  </script>
+  <script src="dark-mode-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+/* Global site typography */
+@import url("https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css");
+
+:root {
+  --font-body: "Computer Modern Serif", "CMU Serif", "Latin Modern Roman", serif;
+}
+
+html, body {
+  /* Use !important to override PureCSS defaults */
+  font-family: var(--font-body) !important;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+button, input, select, textarea {
+  font-family: inherit !important;
+}
+
+.topnav a {
+  font-size: 1em;
+}
+
+/* Home page: maintainer contact line */
+.contact-line {
+  font-size: 0.92rem;
+  color: #555;
+}
+.contact-line a {
+  color: #0078e7;
+  text-decoration: none;
+}
+.contact-line a:hover {
+  text-decoration: underline;
+}
+html.dark-mode body .contact-line {
+  color: #b0b0b0;
+}
+html.dark-mode body .contact-line a {
+  color: #7eb8ff;
+}
+
+/* Home page: catalog summary + embedded PDFs */
+.catalog-summary {
+  margin: 32px auto 0;
+  text-align: left;
+  max-width: 1200px;
+}
+
+.catalog-summary h2 {
+  margin: 28px 0 8px;
+  font-size: 1.35rem;
+}
+
+.catalog-summary__bullets {
+  margin: 10px 0 18px;
+  padding-left: 1.2rem;
+}
+
+.pdf-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.pdf-figure {
+  margin: 0;
+}
+
+.pdf-blurb {
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.pdf-caption {
+  font-size: 0.95rem;
+  margin: 0 0 8px;
+}
+
+.pdf-embed-link {
+  display: block;
+}
+
+.pdf-embed {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+/* Acknowledgements section */
+.acknowledgements {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  text-align: left;
+}
+
+.acknowledgements h2 {
+  margin: 0 0 20px;
+  font-size: 1.35rem;
+}
+
+.acknowledgements__content {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.acknowledgements__logo {
+  flex-shrink: 0;
+}
+
+.acknowledgements__logo img {
+  max-width: 120px;
+  height: auto;
+  display: block;
+}
+
+.acknowledgements__text {
+  flex: 1;
+  min-width: 280px;
+}
+
+.acknowledgements__text p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.acknowledgements__text p:last-child {
+  margin-bottom: 0;
+}
+
+.acknowledgements__text a {
+  color: #0078e7;
+  text-decoration: none;
+}
+
+.acknowledgements__text a:hover {
+  text-decoration: underline;
+}
+
+.acknowledgements__read-more {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.acknowledgements__full {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.2);
+}
+
+.acknowledgements__full p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.acknowledgements__full p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .catalog-summary {
+    margin-top: 24px;
+  }
+
+  .pdf-embed {
+    border-radius: 8px;
+  }
+}
+
+/* ========== Dark mode toggle (home + interactive pages) ========== */
+.dark-mode-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 1000;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  color: #495057;
+}
+.dark-mode-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+.dark-mode-toggle:active {
+  transform: scale(0.98);
+}
+
+/* Dark mode: background, text, inputs — sky images stay unchanged */
+html.dark-mode body {
+  background-color: #0e0e0e !important;
+  color: #e8e8e8 !important;
+}
+html.dark-mode body #main,
+html.dark-mode body .catalog-summary,
+html.dark-mode body .pdf-blurb,
+html.dark-mode body .pdf-caption {
+  color: #e8e8e8;
+}
+html.dark-mode body .catalog-summary h2,
+html.dark-mode body h1,
+html.dark-mode body h2 {
+  color: #f0f0f0;
+}
+html.dark-mode body .catalog-summary__bullets li {
+  color: #e0e0e0;
+}
+html.dark-mode body .credit,
+html.dark-mode body .credit a {
+  color: #b0b0b0 !important;
+}
+html.dark-mode body .credit a:hover {
+  color: #7eb8ff !important;
+}
+html.dark-mode body #results-info {
+  color: #b0b0b0 !important;
+}
+html.dark-mode body input,
+html.dark-mode body select,
+html.dark-mode body textarea {
+  background-color: #2a2a2a !important;
+  color: #e8e8e8 !important;
+  border-color: #444 !important;
+}
+html.dark-mode body .pure-form fieldset {
+  color: #e8e8e8;
+}
+html.dark-mode body .pure-button {
+  background-color: #e8a855;
+  color: #1a1a1a;
+  border-color: #e8a855;
+}
+html.dark-mode body .pure-button-primary {
+  background-color: #e8a855;
+  color: #1a1a1a;
+  border-color: #e8a855;
+}
+html.dark-mode body .pure-button:hover {
+  background-color: #f0c060;
+  color: #1a1a1a;
+}
+html.dark-mode body .pure-button-primary:hover {
+  background-color: #f0c060;
+}
+/* Keep disabled buttons (e.g. "Loading…") neutral, not orange */
+html.dark-mode body .pure-button-disabled,
+html.dark-mode body .pure-button-disabled:hover {
+  background-color: #333;
+  color: #888;
+  border-color: #444;
+}
+html.dark-mode body .pic {
+  border-color: #0e0e0e !important;   /* match dark background so the frame is invisible */
+}
+html.dark-mode body .pic-container.selected img {
+  border-color: #0078e7 !important;
+}
+html.dark-mode body .warning,
+html.dark-mode body .warning-highlight {
+  color: #e8a855 !important;
+}
+html.dark-mode body .warning a {
+  color: #f0c060 !important;
+}
+html.dark-mode body .pic-label {
+  color: #b0b0b0;
+}
+html.dark-mode body .pic-label a {
+  color: #f0c060;   /* orange accent for Spectra links in dark mode */
+}
+html.dark-mode body .pic-loading {
+  border-color: #333;
+  border-top-color: #0078e7;
+}
+html.dark-mode body .filter-grid label {
+  color: #e8e8e8;
+}
+html.dark-mode body .options label {
+  color: #e8e8e8;
+}
+html.dark-mode body hr {
+  border-color: #444;
+}
+html.dark-mode body #pagination-controls button {
+  background-color: #e8a855;
+  color: #1a1a1a;
+  border-color: #e8a855;
+}
+html.dark-mode body #pagination-controls button:hover:not(:disabled) {
+  background-color: #f0c060;
+  color: #1a1a1a;
+}
+html.dark-mode body #pagination-controls button:disabled {
+  opacity: 0.5;
+}
+html.dark-mode body .acknowledgements {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+html.dark-mode body .acknowledgements__text a {
+  color: #7eb8ff;
+}
+html.dark-mode body .acknowledgements__full {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Toggle button in dark mode */
+html.dark-mode body .dark-mode-toggle {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  color: #f0c060;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+html.dark-mode body .dark-mode-toggle:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== Dark-mode anti-flash + orange accent ===== */
+/* Paint the dark background on <html> before <body> styles load (no flash). */
+html.dark-mode {
+  background-color: #0e0e0e;
+}
+
+/* Orange nav bar in dark mode (DESI-blue in light mode, defined per page). */
+html.dark-mode body .topnav {
+  background-color: #e8a855;
+}
+html.dark-mode body .topnav a {
+  color: #1a1a1a;
+}
+html.dark-mode body .topnav a:hover {
+  background-color: #f0c060;
+  color: #1a1a1a;
+}
+html.dark-mode body .topnav a.active {
+  background-color: #d98c33;
+  color: #1a1a1a;
+}
+
+/* Select-mode toggle: keep its "active" state orange too. */
+html.dark-mode body #select-toggle.active {
+  background-color: #d98c33;
+  color: #1a1a1a;
+}
